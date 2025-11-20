@@ -1,0 +1,2 @@
+/usr/bin/ar qc libprism_tui.a CMakeFiles/prism_tui.dir/src/app.c.o
+/usr/bin/ranlib libprism_tui.a

@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/Users/raiyan/code/github/prism/build",
+  "command": "/usr/bin/cc  -I/Users/raiyan/code/github/prism/src -std=c17 -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/prism_tui.dir/src/app.c.o -c /Users/raiyan/code/github/prism/src/app.c",
+  "file": "/Users/raiyan/code/github/prism/src/app.c",
+  "output": "CMakeFiles/prism_tui.dir/src/app.c.o"
+},
+{
+  "directory": "/Users/raiyan/code/github/prism/build",
+  "command": "/usr/bin/cc  -I/Users/raiyan/code/github/prism/src -std=c17 -arch arm64 -o CMakeFiles/prism_app.dir/src/main.c.o -c /Users/raiyan/code/github/prism/src/main.c",
+  "file": "/Users/raiyan/code/github/prism/src/main.c",
+  "output": "CMakeFiles/prism_app.dir/src/main.c.o"
+}
+]

@@ -1,0 +1,4 @@
+/Users/raiyan/code/github/prism/build/CMakeFiles/prism_tui.dir
+/Users/raiyan/code/github/prism/build/CMakeFiles/prism_app.dir
+/Users/raiyan/code/github/prism/build/CMakeFiles/edit_cache.dir
+/Users/raiyan/code/github/prism/build/CMakeFiles/rebuild_cache.dir
