@@ -1,0 +1,22 @@
+# Build trees
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Compiled objects
+*.o
+*.obj
+*.pch
+*.pdb
+*.dll
+*.so
+*.dylib
+*.exe
+
+# Editor cruft
+.DS_Store
+.idea/
+.vscode/
