@@ -19,6 +19,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # Collect sources explicitly so beginners can see where to add files.
 set(PRISM_TUI_SOURCES
     src/app.c
+    src/platform.c
 )
 
 add_library(prism_tui STATIC ${PRISM_TUI_SOURCES})
@@ -35,6 +36,23 @@ endif()
 
 add_executable(prism_app src/main.c)
 target_link_libraries(prism_app PRIVATE prism_tui)
+
+# Copy sounds directory to build output
+add_custom_command(TARGET prism_app POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/sounds"
+        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/sounds"
+    COMMENT "Copying sound files to build directory"
+)
+
+# Link platform-specific libraries
+if(WIN32)
+    # Windows: winmm for PlaySound()
+    target_link_libraries(prism_tui PRIVATE winmm)
+else()
+    # Unix/Linux/macOS: math library for sin(), pow(), etc.
+    target_link_libraries(prism_tui PRIVATE m)
+endif()
 
 # Template demonstrating how third-party libraries can be wired in later.
 # Uncomment and adjust these lines once you have an actual dependency:

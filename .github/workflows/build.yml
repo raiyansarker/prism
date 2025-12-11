@@ -1,0 +1,138 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Windows Build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload Windows executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacman-windows
+          path: build/bin/Release/*.exe
+          if-no-files-found: warn
+
+  build-macos:
+    name: macOS Build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload macOS executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacman-macos
+          path: build/bin/prism_app
+          if-no-files-found: warn
+
+  build-linux:
+    name: Linux Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload Linux executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacman-linux
+          path: build/bin/prism_app
+          if-no-files-found: warn
+
+  release:
+    name: Create Release
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Get short commit hash
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          # Windows
+          if [ -d "artifacts/pacman-windows" ]; then
+            cd artifacts/pacman-windows
+            zip -r ../../release/pacman-windows-${{ steps.vars.outputs.sha_short }}.zip .
+            cd ../..
+          fi
+          # macOS
+          if [ -d "artifacts/pacman-macos" ]; then
+            cd artifacts/pacman-macos
+            chmod +x prism_app 2>/dev/null || true
+            zip -r ../../release/pacman-macos-${{ steps.vars.outputs.sha_short }}.zip .
+            cd ../..
+          fi
+          # Linux
+          if [ -d "artifacts/pacman-linux" ]; then
+            cd artifacts/pacman-linux
+            chmod +x prism_app 2>/dev/null || true
+            tar -czvf ../../release/pacman-linux-${{ steps.vars.outputs.sha_short }}.tar.gz .
+            cd ../..
+          fi
+
+      - name: Delete existing release with same tag
+        run: |
+          gh release delete "build-${{ steps.vars.outputs.sha_short }}" --yes || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: build-${{ steps.vars.outputs.sha_short }}
+          name: Build ${{ steps.vars.outputs.sha_short }}
+          body: |
+            Automated build from commit ${{ github.sha }}
+            
+            **Commit:** `${{ steps.vars.outputs.sha_short }}`
+            **Branch:** `${{ github.ref_name }}`
+            **Message:** ${{ github.event.head_commit.message }}
+          files: release/*
+          prerelease: true
