@@ -73,12 +73,14 @@ jobs:
           mkdir -p release
           # Windows
           if [ -d "artifacts/pacman-windows" ]; then
+            cp -r sounds artifacts/pacman-windows/
             cd artifacts/pacman-windows
             zip -r ../../release/pacman-windows-${{ steps.vars.outputs.sha_short }}.zip .
             cd ../..
           fi
           # macOS
           if [ -d "artifacts/pacman-macos" ]; then
+            cp -r sounds artifacts/pacman-macos/
             cd artifacts/pacman-macos
             chmod +x prism_app 2>/dev/null || true
             zip -r ../../release/pacman-macos-${{ steps.vars.outputs.sha_short }}.zip .
