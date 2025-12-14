@@ -1,16 +1,8 @@
 /*
- * Console Pac-Man - Main Entry Point
- *
- * Cross-platform terminal game.
- *
- * Standard C libraries used:
- *   - stdio.h, stdlib.h, time.h
- *
- * Platform-specific handling in platform.c:
- *   - Windows: conio.h + Windows Console API
- *   - Unix/Linux/macOS: termios.h + POSIX calls
- *
- * See platform.h for detailed documentation.
+ * Pac-Man Game
+ * 
+ * A simple console-based Pac-Man game.
+ * Use WASD to move, R to restart, Q to quit.
  */
 
 #include <stdio.h>
@@ -19,47 +11,50 @@
 #include "app.h"
 #include "platform.h"
 
-/* Game timing constants (milliseconds) */
-#define GAME_TICK_MS    400   /* Ghost movement interval */
-#define INPUT_POLL_MS   20    /* How often to check for input */
+// How often things happen (in milliseconds)
+#define GAME_TICK_MS    400   // Ghosts move every 400ms
+#define INPUT_POLL_MS   20    // Check for keyboard every 20ms
 
-int main(void) {
-    /* Initialize platform-specific terminal handling */
+int main() {
+    // Setup the terminal for the game
     platform_init();
     platform_enter_fullscreen();
 
-    App app = app_create();
+    // Create the game
+    struct App app = app_create();
 
     long last_tick = platform_time_ms();
     long last_poll = platform_time_ms();
 
-    /* Main game loop - never blocks */
+    // Main game loop
     while (app.running) {
         long now = platform_time_ms();
 
-        /* Poll for input at regular intervals */
+        // Check for keyboard input
         if (now - last_poll >= INPUT_POLL_MS) {
             while (platform_kbhit()) {
                 int ch = platform_getch();
                 app_handle_input(&app, ch);
-                if (!app.running) break;
+                if (app.running == false) {
+                    break;
+                }
             }
             last_poll = now;
         }
 
-        /* Update game state at fixed tick rate */
+        // Update game (move ghosts, etc)
         if (now - last_tick >= GAME_TICK_MS) {
             app_update(&app);
             last_tick = now;
         }
 
-        /* Render if needed (only redraws on changes) */
+        // Draw the game
         app_render(&app);
     }
 
-    /* Cleanup */
+    // Clean up
     app_destroy(&app);
     platform_exit_fullscreen();
 
-    return EXIT_SUCCESS;
+    return 0;
 }

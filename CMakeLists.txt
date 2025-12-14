@@ -1,74 +1,44 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.10)
 
-project(PrismTui LANGUAGES C)
+project(PacMan C)
 
-# Export compile_commands.json for IDEs and static analyzers (clangd, VS Code, etc.).
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# Use C11 standard
+set(CMAKE_C_STANDARD 11)
 
-# Allow CMake to look for custom find modules in our repo.
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
-
-# Default to a modern C dialect without GNU extensions for consistent builds.
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
-
-# Place binaries inside the build tree for ease of cleanup.
+# Where to put the output
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-# Collect sources explicitly so beginners can see where to add files.
-set(PRISM_TUI_SOURCES
+# Source files for the game
+set(SOURCES
     src/app.c
     src/platform.c
 )
 
-add_library(prism_tui STATIC ${PRISM_TUI_SOURCES})
-target_include_directories(prism_tui PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-)
+# Create the library
+add_library(game_lib STATIC ${SOURCES})
+target_include_directories(game_lib PUBLIC src)
 
-# Tighten warnings early while keeping the list short and readable.
+# Show warnings
 if(MSVC)
-    target_compile_options(prism_tui PRIVATE /W4 /permissive- /EHsc)
+    target_compile_options(game_lib PRIVATE /W4)
 else()
-    target_compile_options(prism_tui PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(game_lib PRIVATE -Wall -Wextra)
 endif()
 
-add_executable(prism_app src/main.c)
-target_link_libraries(prism_app PRIVATE prism_tui)
+# Create the game executable
+add_executable(pacman src/main.c)
+target_link_libraries(pacman PRIVATE game_lib)
 
-# Copy sounds directory to build output
-add_custom_command(TARGET prism_app POST_BUILD
+# Copy sounds folder to where the game runs
+add_custom_command(TARGET pacman POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/sounds"
         "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/sounds"
-    COMMENT "Copying sound files to build directory"
 )
 
-# Link platform-specific libraries
+# Link libraries needed by each platform
 if(WIN32)
-    # Windows: winmm for PlaySound()
-    target_link_libraries(prism_tui PRIVATE winmm)
+    target_link_libraries(game_lib PRIVATE winmm)
 else()
-    # Unix/Linux/macOS: math library for sin(), pow(), etc.
-    target_link_libraries(prism_tui PRIVATE m)
+    target_link_libraries(game_lib PRIVATE m)
 endif()
-
-# Template demonstrating how third-party libraries can be wired in later.
-# Uncomment and adjust these lines once you have an actual dependency:
-# find_package(ExternalLib CONFIG REQUIRED)
-# target_link_libraries(prism_tui PRIVATE ExternalLib::ExternalLib)
-
-# Alternatively, drop vendored CMake projects under vendor/<lib> and use:
-# add_subdirectory(vendor/some_lib)
-# target_link_libraries(prism_tui PRIVATE some_lib)
-
-# FetchContent example (see README for details):
-# include(FetchContent)
-# FetchContent_Declare(
-#   another_lib
-#   GIT_REPOSITORY https://github.com/example/another_lib.git
-#   GIT_TAG        v1.0.0
-# )
-# FetchContent_MakeAvailable(another_lib)
-# target_link_libraries(prism_tui PRIVATE another_lib)
